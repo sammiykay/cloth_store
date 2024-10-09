@@ -17,8 +17,82 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from .decorator import *
 import datetime
+
+import os
+import tempfile
+import random
+import requests
+from django.core.files import File
+from slugify import slugify
 # Create your views here.
 from django.shortcuts import get_object_or_404, render
+
+
+
+API_KEY = "wYgceGijHpAwJQSMwrFkNIqDC0jQrBTymFNzFcMPtyQ"
+UNSPLASH_URL = "https://api.unsplash.com/search/photos"
+
+# List of clothing items
+clothing_items = [
+    "Casual T-shirt", "Formal Shirt", "Summer Dress", "Denim Jacket", "Leather Jacket",
+    "Sweatshirt", "Polo Shirt", "Blazer", "Cardigan", "Hoodie", 
+    "Shorts", "Chinos", "Maxi Dress", "Cargo Pants", "Skinny Jeans",
+    "Floral Skirt", "Bomber Jacket", "Puffer Coat", "Turtleneck Sweater", "Track Pants",
+    "Vest", "Cropped Top", "High-waist Jeans", "Bodycon Dress", "Midi Skirt",
+    "Windbreaker", "Poncho", "Dungarees", "Anorak", "Plaid Shirt"
+]
+
+# Function to get image URL from Unsplash API based on the clothing item name
+def get_clothing_images(clothing_item):
+    params = {
+        "query": clothing_item,
+        "client_id": API_KEY,
+        "per_page": 1
+    }
+    response = requests.get(UNSPLASH_URL, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if data['results']:
+            image_url = data['results'][0]['urls']['regular']
+            return image_url
+    return None
+
+# Function to download image from a URL and store it temporarily
+def download_image(image_url):
+    response = requests.get(image_url, stream=True)
+    if response.status_code == 200:
+        # Create a temporary file
+        img_temp = tempfile.NamedTemporaryFile(delete=True)
+        # Write the image content to the temporary file
+        img_temp.write(response.content)
+        img_temp.flush()  # Flush the buffer to write content
+        return img_temp
+    return None
+
+# Function to save products to the database
+def save_clothing_products():
+    for clothing in clothing_items:
+        image_url = get_clothing_images(clothing)
+        if image_url:
+            # Generate a random price between 20 and 100
+            price = random.randint(4000, 10000)
+            # Download the image and store it temporarily
+            img_temp = download_image(image_url)
+            
+            if img_temp:
+                # Create a new product instance
+                product = Product(
+                    name=clothing,
+                    price=price,
+                    digital=False,  # Assuming it's a physical product
+                    description=f"High-quality {clothing.lower()} available for purchase."
+                )
+                # Save the image to the Product's ImageField using Django's File class
+                product.image.save(f"{slugify(clothing)}.jpg", File(img_temp), save=True)
+                img_temp.close()  # Close and delete the temporary file
+                print(f"Saved: {clothing} with price {price} and image from {image_url}")
+
+
 
 @ non_driver_required
 def store(request):
@@ -62,10 +136,13 @@ def cart(request):
     else:
         messages.error(request, 'You need to login')
         return redirect('/login')
+
+    total = order.get_cart_total + 1500
     context = {
         'items': items,
         'order': order,
         'cartItems': cartItems,
+        'total': total,
     }
     return render(request, 'store/cart.html', context)
 
@@ -80,11 +157,12 @@ def checkout(request):
         messages.error(request, 'You need to login')
         return redirect('/login')
         
-    
+    total = order.get_cart_total + 1500
     context = {
         'cartItems': cartItems,
         'items': items,
         'order': order,
+        'total': total,
     }
     return render(request, 'store/checkout.html', context)
 
@@ -201,7 +279,6 @@ def contact(request):
 
 
     
-@ non_driver_required
 def assign_driver_to_delivery(delivery):
     # Get the driver with the least number of active deliveries
     driver = DeliveryDriver.objects.order_by('current_deliveries').first()
@@ -228,8 +305,7 @@ def processOrder(request):
         total = float(data['form']['total'])
         order.transaction_id = transaction_id
 
-        if total == order.get_cart_total:
-            order.complete = True
+        order.complete = True
         order.save()
         print(order.shipping)
         shipping = Shipping.objects.create(
@@ -241,6 +317,9 @@ def processOrder(request):
                 state = data['shipping']['state'],
                 )
         print(shipping.address)
+        print(order.get_cart_total)
+        print(order.customer)
+        print(order.complete)
         delivery = Delivery.objects.create(
                 order=order,
                 customer=customer,
