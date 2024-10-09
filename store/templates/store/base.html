@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="{% static 'css/output.css' %}">
+	<title>Store</title>
+</head>
+
+<body>
+	<!--
+  This example requires some changes to your config:
+  
+  ```
+  // tailwind.config.js
+  module.exports = {
+    // ...
+    plugins: [
+      // ...
+      require('@tailwindcss/forms'),
+      require('@tailwindcss/aspect-ratio'),
+    ],
+  }
+  ```
+-->
+	<div class="bg-white">
+		<!--
+	  Mobile menu
+  
+	  Off-canvas menu for mobile, show/hide based on off-canvas menu state.
+	-->
+		<div class="relative z-40 lg:hidden" role="dialog" aria-modal="true">
+			<!--
+		Off-canvas menu backdrop, show/hide based on off-canvas menu state.
+  
+		Entering: "transition-opacity ease-linear duration-300"
+		  From: "opacity-0"
+		  To: "opacity-100"
+		Leaving: "transition-opacity ease-linear duration-300"
+		  From: "opacity-100"
+		  To: "opacity-0"
+	  -->
+
+			
+		</div>
+
+		<header class="relative">
+			<nav aria-label="Top">
+				<!-- Top navigation -->
+				<div class="bg-orange-900">
+					<div class="mx-auto flex h-10 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+						<!-- Currency selector -->
+						<div></div>
+						{% if request.user.is_authenticated %}
+						<div class="flex items-center space-x-6">
+							<a href="{% url 'logout' %}" class="text-sm font-medium text-white hover:text-gray-100">Logout</a>
+						</div>
+						{% else %}
+						<div class="flex items-center space-x-6">
+							<a href="{% url 'login' %}" class="text-sm font-medium text-white hover:text-gray-100">Sign in</a>
+							<a href="{% url 'register' %}" class="text-sm font-medium text-white hover:text-gray-100">Create an account</a>
+						</div>
+						{% endif %}
+					</div>
+				</div>
+
+				<!-- Secondary navigation -->
+				<div class="bg-white">
+					<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+						<div class="border-b border-gray-200">
+							<div class="flex h-16 items-center justify-between">
+								<!-- Logo (lg+) -->
+								<div class="hidden lg:flex lg:flex-1 lg:items-center">
+									<a href="{% url 'store' %}">
+										<span class="sr-only">Your Company</span>
+										<img class="h-8 w-auto"
+											src="{% static 'images/logo.jpg' %}"
+											alt="">
+									</a>
+								</div>
+<!-- 
+								
+
+								<!-- Logo (lg-) -->
+								<a href="#" class="lg:hidden">
+									<span class="sr-only">Your Company</span>
+									<img src="{% static 'images/logo.jpg' %}"
+										alt="" class="h-8 w-auto">
+								</a>
+
+								<div class="flex flex-1 items-center justify-end">
+
+									<div class="flex items-center lg:ml-8">
+										{% if not request.user.deliverydriver %}
+										<a href="{% url 'user_delivery_status' %}" class="text-sm font-medium text-black hover:text-gray-500 transition-colors duration-300 transtion.5s">My Orders</a>
+										{% endif %}
+										<!-- Cart -->
+										 {% if not request.user.deliverydriver %}
+										<div class="ml-4 flow-root lg:ml-8">
+											<a href="{% url 'cart' %}" class="group -m-2 flex items-center p-2">
+												<svg class="h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
+													fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+													stroke="currentColor" aria-hidden="true" data-slot="icon">
+													<path stroke-linecap="round" stroke-linejoin="round"
+														d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+												</svg>
+												<span
+													class="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800" id="cart-items">{{cartItems}}</span>
+												<span class="sr-only">items in cart, view bag</span>
+											</a>
+										</div>
+										{% endif %}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</nav>
+		</header>
+	</div>
+	
+	{% block content %}
+	{% endblock %}
+</body>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.16/dist/sweetalert2.all.min.js"></script>
+<script type="text/javascript" src="{% static 'js/store.js' %}"></script>
+<script>
+	var user = '{{request.user}}'
+
+function getToken(name) {
+	var cookieValue = null;
+	if (document.cookie && document.cookie !== '') {
+		var cookies = document.cookie.split(';');
+		for (var i = 0; i < cookies.length; i++) {
+			var cookie = cookies[i].trim();
+			if (cookie.substring(0, name.length + 1) === (name + '=')) {
+				cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+				break
+			}
+		}
+	}
+	return cookieValue
+}
+var csrftoken = getToken('csrftoken');
+
+</script>
+</html>

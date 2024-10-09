@@ -1,0 +1,594 @@
+{% extends 'store/base.html' %}
+{% block content %}
+{% load static %}
+
+
+<!--
+  This example requires some changes to your config:
+  
+  ```
+  // tailwind.config.js
+  module.exports = {
+    // ...
+    plugins: [
+      // ...
+      require('@tailwindcss/forms'),
+    ],
+  }
+  ```
+-->
+<div class="bg-white">
+	<div class="mx-auto max-w-2xl px-4 pb-24 pt-16 sm:px-6 lg:max-w-7xl lg:px-8">
+	  <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Shopping Cart</h1>
+	  <form class="mt-12 lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
+		<section aria-labelledby="cart-heading" class="lg:col-span-7">
+		  <h2 id="cart-heading" class="sr-only">Items in your shopping cart</h2>
+  
+		  <ul role="list" class="divide-y divide-gray-200 border-b border-t border-gray-200">
+			{% for item in items %}
+			<li class="flex py-6 sm:py-10">
+			  <div class="flex-shrink-0">
+				<img src={{item.product.imageURL}} alt="Front of men&#039;s Basic Tee in sienna." class="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48">
+			  </div>
+  
+			  <div class="ml-4 flex flex-1 flex-col justify-between sm:ml-6">
+				<div class="relative pr-9 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:pr-0">
+				  <div>
+					<div class="flex justify-between">
+					  <h3 class="text-sm">
+						<a href="#" class="font-medium text-gray-700 hover:text-gray-800">{{item.product.name}}</a>
+					  </h3>
+					</div>
+					<p class="mt-1 text-sm font-medium text-gray-900">&#8358;{{item.product.price}}</p>
+				  </div>
+  
+				  <div class="mt-4 sm:mt-0 sm:pr-9">
+					<label for="quantity-0" class="sr-only">Quantity, {{item.product.name}}</label>
+					<div class="flex items-center justify-center space-x-4">
+						
+						<!-- Left Arrow -->
+						  <svg xmlns="http://www.w3.org/2000/svg" data-product="{{item.product.id}}" data-action="remove" class="update-cart h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+						  </svg>
+					  
+						<!-- Number in the Middle -->
+						<span class="text-sm font-bold">{{item.quantity}}</span>
+					  
+						<!-- Right Arrow -->
+						  <svg xmlns="http://www.w3.org/2000/svg" data-product="{{item.product.id}}" data-action="add" class="update-cart h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+						  </svg>
+					  </div>
+  
+					<div class="absolute right-0 top-0">
+					  <button type="button" data-product="{{item.product.id}}" data-action="delete" class="-m-2 inline-flex p-2 update-cart text-gray-400 hover:text-gray-500">
+						<span class="sr-only">Remove</span>
+						<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+						  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+						</svg>
+					  </button>
+					</div>
+				  </div>
+				</div>
+  
+			  </div>
+			</li>
+			{% endfor %}
+		  </ul>
+		</section>
+  
+		<!-- Order summary -->
+		<section aria-labelledby="summary-heading" class="mt-16 rounded-lg bg-gray-50 px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
+		  <h2 id="summary-heading" class="text-lg font-medium text-gray-900">Order summary</h2>
+  
+		  <dl class="mt-6 space-y-4">
+			<div class="flex items-center justify-between">
+			  <dt class="text-sm text-gray-600">Subtotal</dt>
+			  <dd class="text-sm font-medium text-gray-900">&#8358;{{order.get_cart_total}}</dd>
+			</div>
+			<div class="flex items-center justify-between border-t border-gray-200 pt-4">
+			  <dt class="flex items-center text-sm text-gray-600">
+				<span>Shipping estimate</span>
+				<a href="#" class="ml-2 flex-shrink-0 text-gray-400 hover:text-gray-500">
+				  <span class="sr-only">Learn more about how shipping is calculated</span>
+				  <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+					<path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.94a.75.75 0 1 1-1.061-1.061 3 3 0 1 1 2.871 5.026v.345a.75.75 0 0 1-1.5 0v-.5c0-.72.57-1.172 1.081-1.287A1.5 1.5 0 1 0 8.94 6.94ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+				  </svg>
+				</a>
+			  </dt>
+			  <dd class="text-sm font-medium text-gray-900">$5.00</dd>
+			</div>
+			<div class="flex items-center justify-between border-t border-gray-200 pt-4">
+			  <dt class="text-base font-medium text-gray-900">Order total</dt>
+			  <dd class="text-base font-medium text-gray-900">&#8358;{{order.get_cart_total}}</dd>
+			</div>
+		  </dl>
+  
+		  <div class="mt-6">
+			<a href="{% url 'checkout' %}" class="w-full rounded-md border border-transparent bg-orange-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-50">Checkout</a>
+		  </div>
+		</section>
+	  </form>
+	</div>
+  </div>
+  
+
+
+{% endblock %}
+
+
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Cart | Ecommerce</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<style type="text/css">
+	* {
+	margin: 0;
+	padding: 0;
+	font-family: sans-serif;
+}
+	
+		body {
+			overflow-x: hidden;
+		}
+		.nav {
+			background-color: grey;
+			width: 100%;
+			align-items: center;
+			justify-content: space-around;
+			display: flex;
+			min-height: 10vh;
+		}	
+		nav {
+			letter-spacing: 7px;
+			font-weight: bold;
+			color: white;
+			font-size: 25px;
+
+		}
+		nav a {
+			text-decoration: none;
+			color: wheat;
+			transition: .3s;
+		}
+		nav a:hover {
+			color: white;
+			transition: .3s;
+		}
+		.link2 {
+			display: none;
+			transition: .3s;
+		}
+		.links ul {
+			display: flex;
+			justify-content: space-around;
+			width: 480px;
+		}
+		.links li {
+			list-style: none;
+		}
+		.links li a{
+			color: wheat;
+			font-size: 13px;
+			letter-spacing: 2px;
+			text-decoration: none;
+			transition: .3s ease-in;
+		}
+		.links li a:hover ,.link2 li a:hover {
+			color: white;
+			transition: .3s ease-in;
+		}
+		.burger {
+			height: 17px;
+			cursor: pointer;
+			width: 25px;
+			display: none;
+		}
+		.burg1 {
+			background-color: wheat;
+			width: 24px;
+			height: 2px;
+			transition: .3s;
+		} 
+		.burg2, .burg3 {
+			background-color: wheat;
+			margin-top: 5px;
+			width: 24px;
+			height: 2px;	
+			transition: .3s;
+		}
+		.burg2:hover, .burg3:hover, .burg1:hover {
+			background-color: white;
+		}
+		.container {
+		width: 80%;	
+		margin: auto;
+		min-height: 180px;
+		box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+		margin-top: 12px;
+		}
+		@media only screen and (max-width: 998px) {
+			.text {
+			padding-top: 30px;
+			}
+		}
+		@media only screen and (max-width: 909px){
+			.newsletter {
+			position: absolute;
+			top: 34%;
+			border-radius: 9px;
+			transition: all .3s ease;
+			left: 26%;
+			background-color: white;
+			width: 50%;
+			height: 40vh;
+			text-align: center;
+			}
+		}
+		@media only screen and (max-width: 850px){
+			.container {
+				width: 95%;;
+			}
+		}
+		@media only screen and (max-width: 768px){
+			.text {
+			padding-top: 30px;
+			}
+			.links ul {
+				display: none;
+			}
+			.burger {
+				display: block;
+			}
+			.link2 {
+				background-color: grey;
+				width: 40%;
+				position: absolute;
+				top: 9%;
+				left: 62%;
+				float: right;
+				justify-content: flex-end;
+				text-align: center;
+			}
+			 .link2.toggle {
+				display: block;
+				transition: .3s;
+			}
+			.link2 ul {
+			list-style: none;
+			padding-top: 44px;
+			}
+			.link2 li {
+				margin-bottom: 44px;
+			}
+			.link2 li a{
+				color: wheat;
+				font-size: 14px;
+				letter-spacing: 2px;
+				transition: .3s ease-in;
+				text-decoration: none;
+			}
+			.burg1.tog{
+				transform: rotate(-45deg) translate(-5px,6px);
+				transition: .3s;
+			}
+			.burg2.tog {
+				opacity: 0;
+				transition: .3s;
+			}
+			.burg3.tog {
+				transition: .3s;
+				transform: rotate(45deg) translate(-5px,-6px);
+			}
+			.nav2 {
+				justify-content: flex-end;
+				width: 100%;
+				}
+		} 
+		@media only screen and (max-width: 660px) {
+			.container {
+				width: 100%;
+			}
+		}
+.container .but1 {
+	margin-top: 16px;
+	margin-left: 40px;
+	padding: 15px 12px;
+	border:none;background-color: grey;
+	outline: none;
+	cursor: pointer;
+	border-radius: 2.9px;
+	color: wheat;
+}
+.container .table1 {
+	margin-left: 7px;
+	margin-top: 40px;
+}
+.container .table2 {
+	margin-left: 7px;
+	margin-top: 40px;
+	height: 70px;
+	padding-top: 34px;
+}
+.container .table2 .tab {
+	margin-top: 29px;
+}
+.container .table2 .butt {
+	margin-top: 29px;
+	margin-right: 30px;
+}
+.container th,td {
+    text-align: left;
+    padding-left: 30px;
+}
+.container .table1 table {
+	float: left;
+}
+
+.container .table1 button {
+	float: right;
+	margin-right: 30px;
+	padding: 9px;
+	border:none;background-color: grey;
+	outline: none;
+	cursor: pointer;
+	border-radius: 2.9px;
+	color: wheat;
+}
+.container .table1 button a {
+	color: wheat;
+	cursor: pointer;
+	text-decoration: none;
+}
+.container .table2 button a {
+	color: wheat;
+	text-decoration: none;
+}
+.container .table2 button {
+	padding: 9px;
+	border:none;
+	background-color: grey;
+	outline: none;
+	border-radius: 2.9px;
+	color: wheat;
+}
+.table2 img {
+	width: 150px;
+	margin-left: 30px
+}
+.container .table2 {
+	display: flex;
+	justify-content: space-between;
+}
+footer {
+			background-color: grey;
+			width: 100%;
+			align-items: center;
+			justify-content: center;
+			display: flex;
+			min-height: 10vh;
+			margin-top: 30px;
+		}
+		.footer ul li {
+			float: right;
+			padding: 0 26px;
+			color: wheat;
+			list-style: none;
+		}
+@media only screen and (max-width: 890px) {
+	.table2 img {
+	width: 130px;
+	margin-left: 0px;
+	}
+	.container .table2 .butt {
+	margin-top: 29px;
+	margin-right: 5px;
+	}	
+}
+.text {
+			margin-top: 20px;
+		}
+		.text .container {
+		width: 90%;
+		margin: 0 auto;
+		}
+		.text h2 {
+			margin-top: 15px;
+			margin-bottom: 15px;
+		}
+		.text p {
+		margin-bottom: 15px;
+		}
+.text2 {
+	width: 80%;	
+	margin: auto;
+margin-top: 12px;
+
+}
+.w-6.h-6 {
+	width: 30px;
+	height: auto;
+	color: black;
+}
+.arrow {
+	width: 9px;
+	height: 10px;
+	display: inline-table;
+	justify-content: left;	
+}
+.arrow img{
+	width: 12px;
+	transition: .3s
+}
+.arrow img:hover {
+	opacity: 0.5;
+	transition: .3s
+}
+</style>
+<body>
+	<div class="opa">
+		<div class="nav">
+			<div class="logo">
+				<nav>
+					<a href="{% url 'store' %}">Ecom</a>
+				</nav>
+			</div>
+			<div class="links">
+				<ul>
+					{% if user.is_authenticated %}
+					<li><a href="{% url 'store' %}">Home</a></li>
+					<li><a href="{% url 'contact-us' %}">Contact us</a></li>
+					<li><a href="">Services</a></li>
+					<li><a href="{% url 'logout' %}">Log out</a></li>
+					<li><a href="{% url 'cart' %}">[{{cartItems}}]Cart</a></li>
+					{% else %}
+					<li><a href="{% url 'store' %}">Home</a></li>
+					<li><a href="{% url 'contact-us' %}">Contact us</a></li>
+					<li><a href="">Services</a></li>
+					<li><a href="{% url 'login' %}">Log in</a></li>
+					<li><a href="{% url 'register' %}">Register</a></li>
+					<li><a href="{% url 'cart' %}">[{{cartItems}}]Cart</a></li>	
+					{% endif %}
+			</ul>
+				
+				
+			
+			</div>
+			<div class="burger" onclick="tog()">
+				<div class="burg1"></div>
+				<div class="burg2"></div>
+				<div class="burg3"></div>
+			</div>
+		</div>
+		<div class="nav2">
+			<div class="link2">
+				<ul>
+					{% if user.is_authenticated %}
+					<li><a href="{% url 'store' %}">Home</a></li>
+					<li><a href="">Contact us</a></li>
+					<li><a href="{% url 'contact-us' %}">Services</a></li>
+					<li><a href="{% url 'logout' %}">Log out</a></li>
+					<li><a href="{% url 'cart' %}">[{{cartItems}}]Cart</a></li>
+					{% if user.is_staff %}
+					<li><a href="http://localhost:8000/admin">Admin</a></li>
+					{% else %}
+					{% endif %}
+					{% else %}
+					<li><a href="{% url 'store' %}">Home</a></li>
+					<li><a href="{% url 'contact-us' %}">Contact us</a></li>
+					<li><a href="">Services</a></li>
+					<li><a href="{% url 'login' %}">Log in</a></li>
+					<li><a href="{% url 'register' %}">Register</a></li>
+					<li><a href="{% url 'cart' %}">[{{cartItems}}]Cart</a></li>
+					{% endif %}
+				</ul>
+				
+			</div>
+		</div>
+	</div>
+	
+	<div class="container">
+			
+	<a href="{% url 'store' %}"><button class="but1">&#x2190; Continue Shopping</button></a>
+			<div class="table1">
+				<table>
+					<tr>
+					<strong><th>Items: {{order.get_cart_items}}</th>
+						<th>Total: ${{order.get_cart_total}}</th>
+					</tr></strong>
+				</table>
+				<button><a href="{% url 'checkout' %}" target="_blank">Checkout</a></button>
+			</div>
+		</div>
+
+		{% if user.is_authenticated %}
+		{% else %}
+		<div class="text2">
+			<div class="text">
+				<p>
+	    		<strong><h2>You are not logged in</h2></strong>
+				<p>You need to login to view your cart</p>
+	    		<a href="{% url 'login' %}">Login Again</a>
+	    		</p>
+	    	</div>
+		</div>
+		{% endif %}
+			{% for item in items %}
+	<div class="container">	
+		<div class="table2">
+			<div class="img">
+				<img src="{{item.product.imageURL}}">
+			</div>
+				<div class="tab">
+					<table>
+						<tr>
+						<strong><th>Items</th>
+							<th>Price</th>
+							<th>Quantity</th>
+							<th>Total</th>
+						</tr></strong>
+						<tr>
+							<td>{{item.product}}</td>
+							<td>${{item.product.price}}</td>
+							<td>
+								<div class="arrow">
+									<img data-product="{{item.product.id}}" data-action="add" class="update-cart" src="{% static 'images/arrow-up.png' %}">
+									{{item.quantity}}
+									<img data-product="{{item.product.id}}" data-action="remove" class="update-cart" src="{% static 'images/arrow-down.png' %}">
+								</div>
+							</td>
+							<td>${{item.get_total}}</td>
+						</tr>
+					</table>
+				</div>
+				<div class="butt">
+
+				</div>	
+		</div>
+	
+	</div>
+				{% endfor %}
+
+
+
+
+
+
+				<footer>
+						<div class="footer">
+							<ul>
+								<li><strong>FB</strong></li>
+								<li><strong>TW</strong></li>
+								<li><strong>IG</strong></li>
+							</ul>
+						</div>
+				</footer>
+<script type="text/javascript" src="{% static 'js/store.js' %}">
+				
+</script>
+<script type="text/javascript">
+	var user = '{{request.user}}'
+
+	function getToken(name){
+		var cookieValue = null;
+		if (document.cookie && document.cookie !== ''){
+			var cookies = document.cookie.split(';');
+			for (var i = 0; i < cookies.length; i++){
+				var cookie = cookies[i].trim();
+				if (cookie.substring(0, name.length + 1) === (name+ '=')){
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break
+				}
+			}
+		}
+		return cookieValue
+	}
+	var csrftoken = getToken('csrftoken');
+</script>
+</body>
+
+</html>	

@@ -1,0 +1,106 @@
+{% extends 'store/base.html' %}
+{% block content %}
+
+
+<div class="mx-auto my-10" style="width: 80%;">
+    <div class="px-4 sm:px-6 lg:px-8">
+        <div class="sm:flex sm:items-center">
+            <div class="sm:flex-auto">
+                <h1 class="text-base font-semibold leading-6 text-gray-900">Deliveries</h1>
+                <p class="mt-2 text-sm text-gray-700">A list of all deliveries that is attached to you.</p>
+            </div>
+        </div>
+        {% if messages %}
+                {% for message in messages %}
+                <p class="my-3 rounded-md w-full py-3 px-4 bg-green-50 text-green-600">{{message}}</p>
+                {% endfor %}
+                {% endif %}
+        <div class="mt-8 flow-root">
+            <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
+                <div class="inline-block min-w-full py-2 align-middle">
+                    <table class="min-w-full border-separate border-spacing-0">
+                        <thead>
+                            <tr>
+                                <th scope="col"
+                                    class="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter">
+                                    Tracking Number</th>
+                                <th scope="col"
+                                    class="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter">
+                                    Customer</th>
+                                <th scope="col"
+                                    class="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter">
+                                    Address</th>
+                                <th scope="col"
+                                    class="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter">
+                                    Delivery Status</th>
+                                <th scope="col"
+                                    class="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter">
+                                    Products Purchased</th>
+                                <th scope="col"
+                                    class="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter">
+                                    Change Status</th>
+                                <th scope="col"
+                                    class="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter">
+                                    Action</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for delivery, form in deliveries_with_forms %}
+                            <tr>
+                                <td
+                                    class="hidden whitespace-nowrap border-b border-gray-200 px-3 py-4 text-sm text-gray-500 lg:table-cell">
+                                    {{ delivery.tracking_number }}</td>
+                                <td
+                                    class="hidden whitespace-nowrap border-b border-gray-200 px-3 py-4 text-sm text-gray-500 lg:table-cell">
+                                    {{ delivery.customer.name }}</td>
+                                <td
+                                    class="hidden whitespace-nowrap border-b border-gray-200 px-3 py-4 text-sm text-gray-500 lg:table-cell">
+                                    {{ delivery.address }}</td>
+                                <td
+                                    class="hidden whitespace-nowrap border-b border-gray-200 px-3 py-4 text-sm lg:table-cell">
+                                    
+                                    {% if delivery.get_status_display == 'Pending' %}
+                                    <span class="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-inset ring-yellow-600/20 " >{{ delivery.get_status_display }}</span></td>
+                                    {% elif delivery.get_status_display == 'Shipped' %}
+                                    <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-inset ring-blue-600/20">{{ delivery.get_status_display }}</span></td>
+                                    {% elif delivery.get_status_display == 'Processing' %}
+                                    <span class="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-400 ring-inset ring-yellow-600/20">{{ delivery.get_status_display }}</span></td>
+                                    {% elif delivery.get_status_display == 'Delivered' %}
+                                    <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-inset ring-green-600/20">{{ delivery.get_status_display }}</span></td>
+                                    {% else %}
+                                    <span class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-inset ring-red-600/20">{{ delivery.get_status_display }}</span></td>
+                                    {% endif %}
+
+                                <td
+                                    class="hidden whitespace-nowrap border-b border-gray-200 px-3 py-4 text-sm text-gray-500 lg:table-cell">
+                                    <ul>
+                                        {% for item in delivery.order.orderitem_set.all %}
+                                            <li>{{ item.product.name }} (Quantity: {{ item.quantity }})</li>
+                                        {% endfor %}
+                                        </ul>
+                                    </td>
+                                
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <td
+                                    class="hidden whitespace-nowrap border-b border-gray-200 px-3 py-4 text-sm text-gray-500 lg:table-cell">{{ form.as_p }}</td>
+                                        <input type="hidden" name="delivery_id" value="{{ delivery.id }}">
+                                        <td
+                                    class="hidden whitespace-nowrap border-b border-gray-200 px-3 py-4 text-sm text-gray-500 lg:table-cell"><button type="submit" style="float: right;" class="btn text-sm bg-orange-500 text-white py-1 px-2 rounded mt-1 hover:bg-orange-600 transition-all duration-300 transition.5s">Update Status</button></td>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <!-- More people... -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
