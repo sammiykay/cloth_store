@@ -17,7 +17,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from .decorator import *
 import datetime
-
+from decimal import Decimal, InvalidOperation
 import os
 import tempfile
 import random
@@ -166,31 +166,69 @@ def checkout(request):
     }
     return render(request, 'store/checkout.html', context)
 
-@ non_driver_required
+@non_driver_required
 def updateItem(request):
     data = json.loads(request.body)
+    
+    # Extract productId, action, and measurements from the request
     productId = data['productId']
     action = data['action']
+    measurements = data.get('measurements', {})  # Get measurements if present
+
     print('Action:', action)
-    print('productId:', productId)
+    print('ProductId:', productId)
+
+    # Get the customer, product, and order
     customer = request.user.customer
     product = Product.objects.get(id=productId)
     order, created = Order.objects.get_or_create(customer=customer, complete=False)
+
+    # Get or create the order item
     orderItem, created = OrderItem.objects.get_or_create(order=order, product=product)
+
+    # Handle add, remove, and delete actions
     if action == 'add':
         orderItem.quantity = (orderItem.quantity + 1)
+        
+
+        # Validate and set measurements, converting empty strings to None or a default value
+        def clean_decimal(value):
+            try:
+                return Decimal(value) if value else None
+            except (InvalidOperation, TypeError):
+                return None  # Or a default value like 0 if necessary
+
+        orderItem.shirt_length = clean_decimal(measurements.get('shirt_length'))
+        orderItem.body_chest = clean_decimal(measurements.get('body_chest'))
+        orderItem.back_shoulder = clean_decimal(measurements.get('back_shoulder'))
+        orderItem.sleeve = clean_decimal(measurements.get('sleeve'))
+        orderItem.round_sleeve = clean_decimal(measurements.get('round_sleeve'))
+        orderItem.round_mouth = clean_decimal(measurements.get('round_mouth'))
+        orderItem.trouser_length = clean_decimal(measurements.get('trouser_length'))
+        orderItem.thigh_laps = clean_decimal(measurements.get('thigh_laps'))
+        orderItem.knee = clean_decimal(measurements.get('knee'))
+        orderItem.trouser_mouth = clean_decimal(measurements.get('trouser_mouth'))
+        orderItem.half_length = clean_decimal(measurements.get('half_length'))
+        orderItem.full_length = clean_decimal(measurements.get('full_length'))
+        orderItem.cap_size = clean_decimal(measurements.get('cap_size'))
+        
     elif action == 'remove':
         orderItem.quantity = (orderItem.quantity - 1)
     elif action == 'delete':
         orderItem.delete()
-        
+
+    # Save the order item
     orderItem.save()
+
+    # Delete the order item if the quantity is zero or less
     if orderItem.quantity <= 0:
         orderItem.delete()
-    order, created = Order.objects.get_or_create(customer=customer, complete=False)
-    cartItems = cartItems = order.get_cart_items
-    return JsonResponse(f'{cartItems}', safe=False)
 
+    # Get updated cart item count
+    order, created = Order.objects.get_or_create(customer=customer, complete=False)
+    cartItems = order.get_cart_items
+
+    return JsonResponse(f'{cartItems}', safe=False)
 @ non_driver_required
 def view(request, name_id):
     if request.user.is_authenticated:
@@ -276,8 +314,43 @@ def contact(request):
         form = Contact()
     return render(request, 'store/contact.html', {'form': form, 'cartItems': cartItems})
 
+@non_driver_required
+def deleteItem(request):
+    data = json.loads(request.body)
+    productId = data.get('productId')
+    
+    # Get the current user's customer
+    customer = request.user.customer
+    
+    # Fetch the product using the productId
+    product = get_object_or_404(Product, id=productId)
+    
+    # Fetch the active order of the customer
+    order = Order.objects.filter(customer=customer, complete=False).first()
+    
+    if order:
+        # Try to get the OrderItem associated with the product
+        orderItem = OrderItem.objects.filter(order=order, product=product).first()
 
+        if orderItem:
+            # Delete the OrderItem from the order
+            orderItem.delete()
 
+            # If no items remain in the order, delete the order itself
+            if not order.orderitem_set.exists():
+                order.delete()
+            
+            # Get the updated cart item count only if the order still exists
+            if order.pk:
+                cartItems = order.get_cart_items
+            else:
+                cartItems = 0
+
+            return JsonResponse({'status': 'success', 'cartItems': cartItems}, safe=False)
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Item not found in cart'}, safe=False)
+    
+    return JsonResponse({'status': 'error', 'message': 'Order not found'}, safe=False)
     
 def assign_driver_to_delivery(delivery):
     # Get the driver with the least number of active deliveries
@@ -399,45 +472,80 @@ def send_delivery_update_email(delivery):
 
 @login_required
 def all_deliveries(request):
-    try:
-        # Check if the user is a delivery driver by accessing the related DeliveryDriver model
-        driver = request.user
-        if DeliveryDriver.objects.filter(user=driver).exists():
-            print('sam')
-        else:
-            return HttpResponse("You can't view this page. It only for drivers", status=403)
+    if request.user.is_staff:
+       
 
-    except DeliveryDriver.DoesNotExist:
-        return HttpResponse("You can't view this", status=403)
-        messages.error(request, "You do not have permission to view this page.")
-    driver = DeliveryDriver.objects.get(user=driver)
+        # Filter deliveries for the logged-in delivery driver
+        deliveries = Delivery.objects.all()
+        
+        # List of forms matching the deliveries
+        forms = [DeliveryStatusUpdateForm(instance=delivery) for delivery in deliveries]
 
-    # Filter deliveries for the logged-in delivery driver
-    deliveries = Delivery.objects.filter(driver=driver)
-    
-    # List of forms matching the deliveries
-    forms = [DeliveryStatusUpdateForm(instance=delivery) for delivery in deliveries]
+        # Zip deliveries and forms
+        deliveries_with_forms = zip(deliveries, forms)
 
-    # Zip deliveries and forms
-    deliveries_with_forms = zip(deliveries, forms)
+        if request.method == 'POST':
+            delivery_id = request.POST.get('delivery_id')
+            delivery = Delivery.objects.get(id=delivery_id)
+            form = DeliveryStatusUpdateForm(request.POST, instance=delivery)
 
-    if request.method == 'POST':
-        delivery_id = request.POST.get('delivery_id')
-        delivery = Delivery.objects.get(id=delivery_id)
-        form = DeliveryStatusUpdateForm(request.POST, instance=delivery)
+            if form.is_valid():
+                form.save()
+                send_delivery_update_email(delivery)
+                if delivery.status == 'DELIVERED':
+                    mark_delivery_as_completed(delivery)
+                messages.success(request, f"Delivery status for Tracking Number {delivery.tracking_number} updated successfully.")
+                return redirect('all_deliveries')  # Refresh the page
+        orders = Order.objects.filter(complete=True)
+        context = {
+            'deliveries_with_forms': deliveries_with_forms,  # Pass zipped data
+            'orders': orders,  # Pass zipped data
+        }
+        return render(request, 'store/deliveries.html', context)
 
-        if form.is_valid():
-            form.save()
-            send_delivery_update_email(delivery)
-            if delivery.status == 'DELIVERED':
-                mark_delivery_as_completed(delivery)
-            messages.success(request, f"Delivery status for Tracking Number {delivery.tracking_number} updated successfully.")
-            return redirect('all_deliveries')  # Refresh the page
 
-    context = {
-        'deliveries_with_forms': deliveries_with_forms,  # Pass zipped data
-    }
-    return render(request, 'store/deliveries.html', context)
+    else:
+
+        try:
+            # Check if the user is a delivery driver by accessing the related DeliveryDriver model
+            driver = request.user
+            if DeliveryDriver.objects.filter(user=driver).exists():
+                print('sam')
+            else:
+                return HttpResponse("You can't view this page. It only for drivers", status=403)
+
+        except DeliveryDriver.DoesNotExist:
+            return HttpResponse("You can't view this", status=403)
+            messages.error(request, "You do not have permission to view this page.")
+        driver = DeliveryDriver.objects.get(user=driver)
+
+        # Filter deliveries for the logged-in delivery driver
+        deliveries = Delivery.objects.filter(driver=driver)
+        
+        # List of forms matching the deliveries
+        forms = [DeliveryStatusUpdateForm(instance=delivery) for delivery in deliveries]
+
+        # Zip deliveries and forms
+        deliveries_with_forms = zip(deliveries, forms)
+
+        if request.method == 'POST':
+            delivery_id = request.POST.get('delivery_id')
+            delivery = Delivery.objects.get(id=delivery_id)
+            form = DeliveryStatusUpdateForm(request.POST, instance=delivery)
+
+            if form.is_valid():
+                form.save()
+                send_delivery_update_email(delivery)
+                if delivery.status == 'DELIVERED':
+                    mark_delivery_as_completed(delivery)
+                messages.success(request, f"Delivery status for Tracking Number {delivery.tracking_number} updated successfully.")
+                return redirect('all_deliveries')  # Refresh the page
+        orders = Order.objects.filter(complete=True)
+        context = {
+            'deliveries_with_forms': deliveries_with_forms,  # Pass zipped data
+            'orders': orders,  # Pass zipped data
+        }
+        return render(request, 'store/deliveries.html', context)
 
 @login_required
 @non_driver_required

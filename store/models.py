@@ -147,13 +147,30 @@ class OrderItem(models.Model):
     quantity = models.IntegerField(default=0, blank=True, null=True)
     date_added = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.product.name
+    # Measurement fields
+    shirt_length = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    body_chest = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    back_shoulder = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    sleeve = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    round_sleeve = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    round_mouth = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    trouser_length = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    thigh_laps = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    knee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    trouser_mouth = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    # Special measurements
+    half_length = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    full_length = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    cap_size = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    # def __str__(self):
+    #     return self.product
+
     @property
     def get_total(self):
         total = self.product.price * self.quantity
         return total
-
 class View(models.Model):
     product= models.OneToOneField(Product, on_delete=models.CASCADE)
     stock = models.IntegerField(default=0, blank=True, null=True)

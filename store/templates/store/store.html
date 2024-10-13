@@ -3,44 +3,167 @@
 {% block content %}
 
 <div class="bg-white">
-	<div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
-	  <h2 class="text-2xl font-bold tracking-tight text-gray-900">Products</h2>
-  
-	  <div class="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-		{% for product in products %}
-		<div class="group relative">
-		  <div class="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
-			<img src="{{product.imageURL}}" alt="Front of men's Basic Tee in black." class="h-full w-full object-cover object-center lg:h-full lg:w-full">
-		  </div>
-		  <div class="mt-4 flex justify-between items-center">
-			<div>
-			  <h3 class="text-sm text-gray-700">
-				<a href="{% url 'product_detail' product.slug %}">
-				  <span aria-hidden="true" class="absolute inset-0"></span>
-				  {{product.name}}
-				</a>
-			  </h3>
-			</div>
-			<div class="relative">
-				<div class="flex items-center">
-					<span class="hidden group-hover:inline-block ml-2">
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none"  data-product="{{product.id}}" data-action="add"  viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 update-cart">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-						  </svg>
-						  
-					</span>
-					<p class="text-sm font-medium text-gray-900 ml-2">&#8358;{{product.price}}</p>
-				</div>
-			</div>
-		  </div>
-		</div>
-		{% endfor %}
-	  </div>
-	</div>
-  </div>
-  
+    <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
+        <h2 class="text-2xl font-bold tracking-tight text-gray-900">Products</h2>
+
+        <div class="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+            {% for product in products %}
+            <div class="group relative">
+                <div class="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
+                    <img src="{{ product.imageURL }}" alt="{{ product.name }}" class="h-full w-full object-cover object-center lg:h-full lg:w-full">
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-sm text-gray-700">
+                            <a href="{% url 'product_detail' product.slug %}">
+                                <span aria-hidden="true" class="absolute inset-0"></span>
+                                {{ product.name }}
+                            </a>
+                        </h3>
+                    </div>
+                    <div class="relative">
+                        <div class="flex items-center">
+                            <span class="hidden group-hover:inline-block ml-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" data-product="{{ product.id }}" data-action="add" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 add-to-cart-btn">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                                </svg>
+                            </span>
+                            <p class="text-sm font-medium text-gray-900 ml-2">&#8358;{{ product.price }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Popup Modal -->
+            <div id="modal-{{ product.id }}" class="modal hidden fixed z-10 inset-0  overflow-y-auto">
+                <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20">
+                    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                        <h2 class="text-lg font-bold mb-4 py-6 text-center">Add {{ product.name }} to Cart</h2>
+                        <form id="add-to-cart-form-{{ product.id }}" class="space-y-6 mx-6" method="POST">
+                            {% csrf_token %}
+                            <!-- Measurement Fields -->
+                            <div class="grid grid-cols-2 gap-4 px-6">
+								<div>
+									<label for="shirt_length" class="block text-sm font-medium leading-6 text-gray-900">Shirt Length (cm)</label>
+									<div class="mt-2">
+										<input id="shirt_length" name="shirt_length" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+				
+								<div>
+									<label for="body_chest" class="block text-sm font-medium leading-6 text-gray-900">Body/Chest (cm)</label>
+									<div class="mt-2">
+										<input id="body_chest" name="body_chest" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+							</div>
+							<div class="grid grid-cols-2 gap-4 px-6">
+								<div>
+									<label for="back_shoulder" class="block text-sm font-medium leading-6 text-gray-900">Back/Shoulder (cm)</label>
+									<div class="mt-2">
+										<input id="back_shoulder" name="back_shoulder" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+				
+								<div>
+									<label for="sleeve_length" class="block text-sm font-medium leading-6 text-gray-900">Sleeve Length (cm)</label>
+									<div class="mt-2">
+										<input id="sleeve_length" name="sleeve" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+							</div>
+							<div class="grid grid-cols-2 gap-4 px-6">
+								<div>
+									<label for="round_sleeve" class="block text-sm font-medium leading-6 text-gray-900">Round Sleeve (cm)</label>
+									<div class="mt-2">
+										<input id="round_sleeve" name="round_sleeve" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+				
+								<div>
+									<label for="round_mouth" class="block text-sm font-medium leading-6 text-gray-900">Round Mouth (cm)</label>
+									<div class="mt-2">
+										<input id="round_mouth" name="round_mouth" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+							</div>
+							<div class="grid grid-cols-2 gap-4 px-6">
+								<div>
+									<label for="trouser_length" class="block text-sm font-medium leading-6 text-gray-900">Trouser Length (cm)</label>
+									<div class="mt-2">
+										<input id="trouser_length" name="trouser_length" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+				
+								<div>
+									<label for="thigh_laps" class="block text-sm font-medium leading-6 text-gray-900">Thigh/Laps (cm)</label>
+									<div class="mt-2">
+										<input id="thigh_laps" name="thigh_laps" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+							</div>
+							<div class="grid grid-cols-2 gap-4 px-6">
+								<div>
+									<label for="knee" class="block text-sm font-medium leading-6 text-gray-900">Knee (cm)</label>
+									<div class="mt-2">
+										<input id="knee" name="knee" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+				
+								<div>
+									<label for="trouser_mouth" class="block text-sm font-medium leading-6 text-gray-900">Trouser Mouth (cm)</label>
+									<div class="mt-2">
+										<input id="trouser_mouth" name="trouser_mouth" type="number" step="0.01" required
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+							</div>
+							<div class="grid grid-cols-2 gap-4 px-6">
+								<div>
+									<label for="half_length" class="block text-sm font-medium leading-6 text-gray-900">Half Length (cm)</label>
+									<div class="mt-2">
+										<input id="half_length" name="half_length" type="number" step="0.01"
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+				
+								<div>
+									<label for="full_length" class="block text-sm font-medium leading-6 text-gray-900">Full Length (cm)</label>
+									<div class="mt-2">
+										<input id="full_length" name="full_length" type="number" step="0.01"
+											class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+									</div>
+								</div>
+							</div>
+							
+							<div class="px-6">
+								<label for="cap_size" class="block text-sm font-medium leading-6 text-gray-900">Cap Size (cm)</label>
+								<div class="mt-2">
+									<input id="cap_size" name="cap_size" type="number" step="0.01"
+										class="block w-full px-3 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+								</div>
+							</div>
+                            <div class="mt-6 flex justify-end px-6">
+                                <button type="button" class="modal-close bg-orange-300 hover:bg-orange-400 text-white px-4 py-2 rounded mr-2">Cancel</button>
+                                <button type="submit" class="bg-orange-500 hover:bg-orange-700 text-white px-4 py-2 rounded">Add to Cart</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 {% endblock %}
-
-
-
-

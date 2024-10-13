@@ -26,7 +26,7 @@
   
 		  <ul role="list" class="divide-y divide-gray-200 border-b border-t border-gray-200">
 			{% for item in items %}
-			<li class="flex py-6 sm:py-10">
+			<li class="flex py-6 sm:py-10" id="item-row-{{item.product.id}}">
 			  <div class="flex-shrink-0">
 				<img src={{item.product.imageURL}} alt="Front of men&#039;s Basic Tee in sienna." class="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48">
 			  </div>
@@ -63,7 +63,7 @@
 					<div class="absolute right-0 top-0">
 					  <button type="button" data-product="{{item.product.id}}" data-action="delete" class="-m-2 inline-flex p-2 update-cart text-gray-400 hover:text-gray-500">
 						<span class="sr-only">Remove</span>
-						<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+						<svg class="h-5 w-5 delete-item-btn" data-product="{{item.product.id}}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
 						  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
 						</svg>
 					  </button>

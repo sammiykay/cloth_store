@@ -102,5 +102,56 @@
 </div>
 
 
+{% if request.user.is_staff %}  
+<div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
+    <h2 class="text-3xl font-bold tracking-tight text-gray-900 mb-8">Order History</h2>
+    {% if orders %}
+        <div class="space-y-12">
+            {% for order in orders %}
+                <div class="border p-6 mt-4 rounded-lg shadow-sm bg-white" style="padding: 20px;">
+                    <h3 class="text-xl font-semibold mb-2 text-gray-700">Order #{{ order.id }} <span class="text-sm text-gray-500">- {{ order.date_order }}</span></h3>
+                    <p class="mb-4 text-gray-600">Transaction ID: <span class="font-semibold">{{ order.transaction_id }}</span></p>
+                    <p class="mb-4 text-gray-600">Customer: <span class="font-semibold">{{ order.customer.user.first_name }} {{ order.customer.user.last_name }}</span></p>
+                    <p class="mb-4 text-gray-600">Email: <span class="font-semibold">{{ order.customer.user.email }}</span></p>
+
+                    <div class="space-y-8">
+                        {% for item in order.orderitem_set.all %}
+                            <div class="border-b pb-4 mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800">{{ item.product.name }}</h4>
+                                <img src="{{item.product.image.url}}" alt="" class="w-32 h-32">
+                                <p class="text-gray-600">Quantity: {{ item.quantity }}</p>
+                                <p class="text-gray-600">Price: &#8358;{{ item.product.price }}</p>
+
+                                <!-- Show measurements if available -->
+                                <div class="mt-4 grid grid-cols-2 gap-4 text-gray-600">
+                                    {% if item.shirt_length %}<div><span class="font-semibold">Shirt Length:</span> {{ item.shirt_length }}</div>{% endif %}
+                                    {% if item.body_chest %}<div><span class="font-semibold">Body Chest:</span> {{ item.body_chest }}</div>{% endif %}
+                                    {% if item.back_shoulder %}<div><span class="font-semibold">Back Shoulder:</span> {{ item.back_shoulder }}</div>{% endif %}
+                                    {% if item.sleeve %}<div><span class="font-semibold">Sleeve:</span> {{ item.sleeve }}</div>{% endif %}
+                                    {% if item.round_sleeve %}<div><span class="font-semibold">Round Sleeve:</span> {{ item.round_sleeve }}</div>{% endif %}
+                                    {% if item.round_mouth %}<div><span class="font-semibold">Round Mouth:</span> {{ item.round_mouth }}</div>{% endif %}
+                                    {% if item.trouser_length %}<div><span class="font-semibold">Trouser Length:</span> {{ item.trouser_length }}</div>{% endif %}
+                                    {% if item.thigh_laps %}<div><span class="font-semibold">Thigh Laps:</span> {{ item.thigh_laps }}</div>{% endif %}
+                                    {% if item.knee %}<div><span class="font-semibold">Knee:</span> {{ item.knee }}</div>{% endif %}
+                                    {% if item.trouser_mouth %}<div><span class="font-semibold">Trouser Mouth:</span> {{ item.trouser_mouth }}</div>{% endif %}
+                                    {% if item.half_length %}<div><span class="font-semibold">Half Length:</span> {{ item.half_length }}</div>{% endif %}
+                                    {% if item.full_length %}<div><span class="font-semibold">Full Length:</span> {{ item.full_length }}</div>{% endif %}
+                                    {% if item.cap_size %}<div><span class="font-semibold">Cap Size:</span> {{ item.cap_size }}</div>{% endif %}
+                                </div>
+
+                                <p class="mt-4 text-gray-700 font-bold">Total for this item: &#8358;{{ item.get_total }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <p class="text-lg font-bold mt-6 text-gray-800">Order Total: &#8358;{{ order.get_cart_total }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-lg text-gray-600">You have no previous orders.</p>
+    {% endif %}
+    {% endif %}
+</div>
 
 {% endblock %}
